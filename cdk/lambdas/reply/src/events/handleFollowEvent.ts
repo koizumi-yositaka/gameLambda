@@ -21,7 +21,7 @@ export default async function handleFollowEvent(
   }
   const profile = await getProfile(userId, channelAccessToken);
 
-  await registerUser(profile);
+  await registerUser(userId, profile.displayName);
 
   const replyMessage = `ようこそ！${profile.displayName}さん！`;
 
@@ -56,12 +56,17 @@ const getProfile = async (
   };
 };
 
-const registerUser = async (user: Profile): Promise<void> => {
+const registerUser = async (
+  userId: string,
+  displayName: string
+): Promise<void> => {
   const gameServerEndpoint = `${process.env.GAME_SERVER_ENDPOINT}/api/users`;
   const requestBody = {
-    userId: user.userId,
-    displayName: user.displayName,
+    userId: userId,
+    displayName: displayName,
   };
+  console.log("Game server endpoint:", gameServerEndpoint);
+  console.log("Request body:", requestBody);
   const response = await fetch(gameServerEndpoint, {
     method: "POST",
     body: JSON.stringify(requestBody),
