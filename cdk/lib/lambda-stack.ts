@@ -14,6 +14,15 @@ const REPOSITORY_TOP = path.resolve(__dirname, "../");
 export class LambdaStudyStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: LambdaStudyStackProps) {
     super(scope, id, props);
+    if (!process.env.GAME_SERVER_ENDPOINT) {
+      throw new Error("GAME_SERVER_ENDPOINT is not set");
+    }
+    if (!process.env.LINE_CHANNEL_ACCESS_TOKEN) {
+      throw new Error("LINE_CHANNEL_ACCESS_TOKEN is not set");
+    }
+    if (!process.env.LINE_CHANNEL_SECRET) {
+      throw new Error("LINE_CHANNEL_SECRET is not set");
+    }
     // Lambda 関数
     const testLambda = new lambda.Function(this, "TestLambda", {
       functionName: `${props?.lambdaName}`,
@@ -26,10 +35,7 @@ export class LambdaStudyStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(30), // LINE API呼び出しのためタイムアウトを延長
       environment: {
         // LINE Channel Access Tokenは環境変数として設定
-        // propsで渡すか、デプロイ後にAWSコンソールで設定するか、AWS Secrets Managerを使用することを推奨
-        ...(props?.lineChannelAccessToken && {
-          LINE_CHANNEL_ACCESS_TOKEN: props.lineChannelAccessToken,
-        }),
+        LINE_CHANNEL_ACCESS_TOKEN: process.env.LINE_CHANNEL_ACCESS_TOKEN,
       },
     });
 
@@ -54,12 +60,9 @@ export class LambdaStudyStack extends cdk.Stack {
       memorySize: 128,
       timeout: cdk.Duration.seconds(30),
       environment: {
-        ...(props?.lineChannelAccessToken && {
-          LINE_CHANNEL_ACCESS_TOKEN: props.lineChannelAccessToken,
-        }),
-        ...(props?.lineChannelSecret && {
-          LINE_CHANNEL_SECRET: props.lineChannelSecret,
-        }),
+        LINE_CHANNEL_ACCESS_TOKEN: process.env.LINE_CHANNEL_ACCESS_TOKEN,
+        LINE_CHANNEL_SECRET: process.env.LINE_CHANNEL_SECRET,
+        GAME_SERVER_ENDPOINT: process.env.GAME_SERVER_ENDPOINT,
       },
     });
 
