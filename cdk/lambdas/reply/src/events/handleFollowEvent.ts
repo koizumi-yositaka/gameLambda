@@ -20,7 +20,11 @@ export default async function handleFollowEvent(
     return;
   }
   const profile = await getProfile(userId, channelAccessToken);
+
+  await registerUser(profile);
+
   const replyMessage = `ようこそ！${profile.displayName}さん！`;
+
   const response = await replyLineMessage(
     channelAccessToken,
     replyToken,
@@ -50,4 +54,22 @@ const getProfile = async (
     pictureUrl: data.pictureUrl,
     statusMessage: data.statusMessage,
   };
+};
+
+const registerUser = async (user: Profile): Promise<void> => {
+  const gameServerEndpoint = `${process.env.GAME_SERVER_ENDPOINT}/api/users`;
+  const requestBody = {
+    userId: user.userId,
+    displayName: user.displayName,
+  };
+  const response = await fetch(gameServerEndpoint, {
+    method: "POST",
+    body: JSON.stringify(requestBody),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Game server API error:", errorText);
+  }
+  const result = await response.json();
+  console.log("Game server API result:", result);
 };
