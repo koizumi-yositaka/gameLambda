@@ -16,8 +16,8 @@ jobs:
     environment:
       name: prod
     env:
-      - LINE_CHANNEL_ACCESS_TOKEN:${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
-      - LINE_CHANNEL_SECRET:${{ secrets.LINE_CHANNEL_SECRET }}
+      LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+      LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
     steps:
       - uses: actions/checkout@v3
 
@@ -26,14 +26,19 @@ jobs:
         with:
           node-version: "22"
       - name: Install CDK app deps
+        working-directory: ./cdk
         run: |
           npm ci
 
+      - name: Build CDK app
+        working-directory: ./cdk
+        run: |
+          npm run build
+
       - name: Build Lambdas
         run: |
-          cd cdk/lambdas
-          cd test && npm install && npm run build && cd ../
-          cd reply && npm install && npm run build && cd ../
+          cd cdk/lambdas/test && npm install && npm run build
+          cd ../reply && npm install && npm run build
 
       - name: Set STAGE
         run: |
@@ -51,6 +56,7 @@ jobs:
               echo "STAGE=dev" >> $GITHUB_ENV
             fi
           fi
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -59,16 +65,20 @@ jobs:
 
       - name: CDK Diff
         if: github.event_name == 'pull_request'
+        working-directory: ./cdk
         run: |
           echo "STAGE: $STAGE"
-          npx aws-cdk diff --all || true
+          npx cdk diff --all || true
+
       - name: CDK Deploy
         if: github.event_name == 'push'
         id: deploy
+        working-directory: ./cdk
         run: |
           echo "STAGE: $STAGE"
-          npx aws-cdk deploy --all --require-approval never --outputs-file cdk-outputs.json
+          npx cdk deploy --all --require-approval never --outputs-file cdk-outputs.json
 
       - name: Show CDK Outputs
         if: github.event_name == 'push'
+        working-directory: ./cdk
         run: cat cdk-outputs.json
