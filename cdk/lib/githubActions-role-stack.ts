@@ -53,6 +53,9 @@ export class GitHubActionsRoleStack extends cdk.Stack {
           "cloudfront:*",
           "ecr:*",
           "route53:*",
+          "lambda:*",
+          "apigateway:*",
+          "sts:GetCallerIdentity",
         ],
         resources: ["*"],
       })
