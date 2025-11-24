@@ -30,11 +30,6 @@ jobs:
         run: |
           npm ci
 
-      - name: Build CDK app
-        working-directory: ./cdk
-        run: |
-          npm run build
-
       - name: Build Lambdas
         run: |
           cd cdk/lambdas/test && npm install && npm run build
