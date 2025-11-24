@@ -3,6 +3,7 @@ import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { verifySignature } from "./common/lineCommon";
 import handleMessageEvent from "./events/handleMessageEvent";
 import handleFollowEvent from "./events/handleFollowEvent";
+import handleUnfollowEvent from "./events/handleUnfollowEvent";
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   console.log("Webhook event received");
@@ -94,6 +95,8 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
           await handleMessageEvent(webhookEvent, channelAccessToken);
         } else if (webhookEvent.type === "follow") {
           await handleFollowEvent(webhookEvent, channelAccessToken);
+        } else if (webhookEvent.type === "unfollow") {
+          await handleUnfollowEvent(webhookEvent, channelAccessToken);
         } else {
           console.log(`Unhandled event type: ${webhookEvent.type}`);
         }
