@@ -3,10 +3,9 @@ export default async function handleUnfollowEvent(
 ): Promise<void> {
   console.log("Unfollow event received");
   const userId = event.source.userId;
-  const replyToken = event.replyToken;
 
-  if (!userId || !replyToken) {
-    console.log("Missing required fields for follow event");
+  if (!userId) {
+    console.log("Missing required fields for unfollow event");
     return;
   }
 
