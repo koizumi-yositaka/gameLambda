@@ -69,11 +69,15 @@ const registerUser = async (
   console.log("Request body:", requestBody);
   const response = await fetch(gameServerEndpoint, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(requestBody),
   });
   if (!response.ok) {
     const errorText = await response.text();
     console.error("Game server API error:", errorText);
+    return;
   }
   const result = await response.json();
   console.log("Game server API result:", result);
