@@ -96,7 +96,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         } else if (webhookEvent.type === "follow") {
           await handleFollowEvent(webhookEvent, channelAccessToken);
         } else if (webhookEvent.type === "unfollow") {
-          await handleUnfollowEvent(webhookEvent, channelAccessToken);
+          await handleUnfollowEvent(webhookEvent);
         } else {
           console.log(`Unhandled event type: ${webhookEvent.type}`);
         }

@@ -1,17 +1,7 @@
-import { replyLineMessage } from "../common/lineCommon";
-
-type Profile = {
-  userId: string;
-  displayName: string;
-  pictureUrl?: string;
-  statusMessage?: string;
-};
-
-export default async function handleFollowEvent(
-  event: LineWebhookEvent,
-  channelAccessToken: string
+export default async function handleUnfollowEvent(
+  event: LineWebhookEvent
 ): Promise<void> {
-  console.log("Follow event received");
+  console.log("Unfollow event received");
   const userId = event.source.userId;
   const replyToken = event.replyToken;
 
