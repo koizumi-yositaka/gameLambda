@@ -33,7 +33,7 @@ jobs:
 
       - name: Build Lambdas
         run: |
-          cd cdk/lambdas/test && npm install && npm run build
+          cd cdk/lambdas/push && npm install && npm run build
           cd ../reply && npm install && npm run build
 
       - name: Set STAGE
