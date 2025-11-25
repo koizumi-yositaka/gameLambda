@@ -45,3 +45,11 @@ export const verifySignature = (
 
   return hash === signature;
 };
+
+export const getUserStatus = async (userId: string): Promise<UserStatus> => {
+  const response = await fetch(
+    `${process.env.GAME_SERVER_ENDPOINT}/api/users/${userId}/status`
+  );
+  const data = await response.json();
+  return data as UserStatus;
+};

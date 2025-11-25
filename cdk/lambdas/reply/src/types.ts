@@ -26,3 +26,9 @@ interface LineReplyMessage {
     text: string;
   }>;
 }
+
+interface UserStatus {
+  userId: string;
+  invalidateFlg: boolean;
+  isParticipating: boolean;
+}
