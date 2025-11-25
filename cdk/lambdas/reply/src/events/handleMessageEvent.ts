@@ -11,20 +11,18 @@ export default async function handleMessageEvent(
   event: LineWebhookEvent,
   channelAccessToken: string
 ): Promise<void> {
+  if (event.type !== "message" || event.message?.type !== "text") {
+    return;
+  }
+
+  const userId = event.source.userId;
+  const messageText = event.message.text;
+  const replyToken = event.replyToken;
+  if (!userId || !messageText || !replyToken) {
+    console.log("Missing required fields for message event");
+    return;
+  }
   try {
-    if (event.type !== "message" || event.message?.type !== "text") {
-      return;
-    }
-
-    const userId = event.source.userId;
-    const messageText = event.message.text;
-    const replyToken = event.replyToken;
-
-    if (!userId || !messageText || !replyToken) {
-      console.log("Missing required fields for message event");
-      return;
-    }
-
     console.log(`Received message from ${userId}: ${messageText}`);
 
     const userStatus = await getUserStatus(userId);
@@ -64,7 +62,7 @@ export default async function handleMessageEvent(
     } else {
       console.error("Unexpected error:", error);
     }
-
+    await replyLineMessage(channelAccessToken, replyToken, error.message);
     return;
   }
 }
