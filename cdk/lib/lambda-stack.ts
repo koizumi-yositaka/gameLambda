@@ -24,12 +24,12 @@ export class LambdaStudyStack extends cdk.Stack {
       throw new Error("LINE_CHANNEL_SECRET is not set");
     }
     // Lambda 関数
-    const testLambda = new lambda.Function(this, "TestLambda", {
-      functionName: `${props?.lambdaName}`,
+    const pushLambda = new lambda.Function(this, "PushLambda", {
+      functionName: `${props?.lambdaName}-push`,
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: "index.handler", // ファイル名.エクスポート名
       code: lambda.Code.fromAsset(
-        path.join(REPOSITORY_TOP, "lambdas/test/dist")
+        path.join(REPOSITORY_TOP, "lambdas/push/dist")
       ),
       memorySize: 128,
       timeout: cdk.Duration.seconds(30), // LINE API呼び出しのためタイムアウトを延長
@@ -40,14 +40,18 @@ export class LambdaStudyStack extends cdk.Stack {
     });
 
     // REST API (API Gateway) を Lambda と紐づけ
-    const api = new apigateway.LambdaRestApi(this, "HelloApi", {
-      handler: testLambda,
-      proxy: true, // 全ルートを Lambda に流すシンプル構成
-      description: "Simple Lambda-backed API",
+    const api = new apigateway.RestApi(this, "PushApi", {
+      description: "Push API",
     });
 
+    // /line/push パスを追加
+    const lineResource = api.root.addResource("line");
+    const pushResource = lineResource.addResource("push");
+    const pushIntegration = new apigateway.LambdaIntegration(pushLambda);
+    pushResource.addMethod("POST", pushIntegration);
+
     // デプロイ後、出力に api.url を出したい場合は CfnOutput も追加可能
-    new cdk.CfnOutput(this, "ApiUrl", { value: api.url });
+    new cdk.CfnOutput(this, "ApiUrl", { value: `${api.url}line/push` });
 
     // Webhook用Lambda関数
     const webhookLambda = new lambda.Function(this, "WebhookLambda", {
@@ -71,13 +75,14 @@ export class LambdaStudyStack extends cdk.Stack {
       description: "LINE Webhook API",
     });
 
-    // /webhook パスを追加
-    const webhookResource = webhookApi.root.addResource("webhook");
+    // /line/webhook パスを追加
+    const webhookLineResource = webhookApi.root.addResource("line");
+    const webhookResource = webhookLineResource.addResource("webhook");
     const webhookIntegration = new apigateway.LambdaIntegration(webhookLambda);
     webhookResource.addMethod("POST", webhookIntegration);
 
     new cdk.CfnOutput(this, "WebhookApiUrl", {
-      value: `${webhookApi.url}webhook`,
+      value: `${webhookApi.url}line/webhook`,
       description: "LINE Webhook endpoint URL",
     });
   }
