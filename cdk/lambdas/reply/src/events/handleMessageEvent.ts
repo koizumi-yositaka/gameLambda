@@ -11,32 +11,61 @@ export default async function handleMessageEvent(
   event: LineWebhookEvent,
   channelAccessToken: string
 ): Promise<void> {
-  if (event.type !== "message" || event.message?.type !== "text") {
+  try {
+    if (event.type !== "message" || event.message?.type !== "text") {
+      return;
+    }
+
+    const userId = event.source.userId;
+    const messageText = event.message.text;
+    const replyToken = event.replyToken;
+
+    if (!userId || !messageText || !replyToken) {
+      console.log("Missing required fields for message event");
+      return;
+    }
+
+    console.log(`Received message from ${userId}: ${messageText}`);
+
+    const userStatus = await getUserStatus(userId);
+
+    const replyMessage = await getReplyMessage(userStatus, messageText);
+
+    const response = await replyLineMessage(
+      channelAccessToken,
+      replyToken,
+      replyMessage
+    );
+
+    if (!response.ok) {
+      // LINE API は text か JSON のどちらかが返ることがあるので両対応
+      let message = "Unknown LINE API error";
+
+      // JSON の場合
+      try {
+        const body = await response.json();
+        if (body?.message) message = body.message;
+        else message = JSON.stringify(body);
+      } catch (_) {
+        // JSON でない → text
+        message = await response.text();
+      }
+
+      console.error(
+        `LINE Reply API error: status=${response.status}, message=${message}`
+      );
+    }
+  } catch (error: any) {
+    // getUserStatus や requestJoin のエラー形式に応じて処理
+    if (error?.statusCode) {
+      console.error(
+        `Error: status=${error.statusCode}, message=${error.message}`
+      );
+    } else {
+      console.error("Unexpected error:", error);
+    }
+
     return;
-  }
-
-  const userId = event.source.userId;
-  const messageText = event.message.text;
-  const replyToken = event.replyToken;
-
-  if (!userId || !messageText || !replyToken) {
-    console.log("Missing required fields for message event");
-    return;
-  }
-
-  console.log(`Received message from ${userId}: ${messageText}`);
-
-  const userStatus = await getUserStatus(userId);
-
-  const response = await replyLineMessage(
-    channelAccessToken,
-    replyToken,
-    await getReplyMessage(userStatus, messageText)
-  );
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("LINE Reply API error:", errorText);
   }
 }
 
@@ -85,6 +114,9 @@ const requestJoin = async (userId: string, roomCode: string): Promise<void> => {
     userId: userId,
   };
 
+  console.log("Game server endpoint:", gameServerEndpoint);
+  console.log("Request body:", requestBody);
+
   const response = await fetch(gameServerEndpoint, {
     method: "POST",
     headers: {
@@ -92,11 +124,25 @@ const requestJoin = async (userId: string, roomCode: string): Promise<void> => {
     },
     body: JSON.stringify(requestBody),
   });
+
   if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Game server API error:", errorText);
-    return;
+    // JSON が返ってくる場合と text の場合どちらも対応
+    let message = "";
+    try {
+      const body = await response.json();
+      if (body?.message) message = body.message;
+      else message = JSON.stringify(body);
+    } catch (_) {
+      message = await response.text();
+    }
+
+    // ここで statusCode と message を throw
+    throw {
+      statusCode: response.status,
+      message,
+    };
   }
+
   const result = await response.json();
   console.log("Game server API result:", result);
 };

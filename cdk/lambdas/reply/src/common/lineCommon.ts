@@ -47,9 +47,27 @@ export const verifySignature = (
 };
 
 export const getUserStatus = async (userId: string): Promise<UserStatus> => {
-  const response = await fetch(
-    `${process.env.GAME_SERVER_ENDPOINT}/api/users/${userId}/status`
-  );
+  const endpoint = `${process.env.GAME_SERVER_ENDPOINT}/api/users/${userId}/status`;
+
+  const response = await fetch(endpoint);
+
+  if (!response.ok) {
+    // JSON が返ってくる場合と text の場合どちらも対応
+    let message = "";
+    try {
+      const body = await response.json();
+      if (body?.message) message = body.message;
+      else message = JSON.stringify(body);
+    } catch (_) {
+      message = await response.text();
+    }
+
+    throw {
+      statusCode: response.status,
+      message,
+    };
+  }
+
   const data = await response.json();
   return data as UserStatus;
 };
