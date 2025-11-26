@@ -5,10 +5,7 @@ const LINE_API_URL = "https://api.line.me/v2/bot/message/push";
 
 interface LinePushMessage {
   to: string;
-  messages: Array<{
-    type: string;
-    text: string;
-  }>;
+  messages: Array<any>;
 }
 
 /**
@@ -17,16 +14,11 @@ interface LinePushMessage {
 async function sendLineMessage(
   channelAccessToken: string,
   userId: string,
-  message: string
+  sendMessage: Array<any>
 ): Promise<Response> {
   const body: LinePushMessage = {
     to: userId,
-    messages: [
-      {
-        type: "text",
-        text: message,
-      },
-    ],
+    messages: sendMessage,
   };
 
   const response = await fetch(LINE_API_URL, {
@@ -59,34 +51,27 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       };
     }
 
-    // リクエストボディからuserIdとmessageを取得
-    let requestBody: { userId?: string; message?: string };
-    try {
-      requestBody = event.body ? JSON.parse(event.body) : {};
-    } catch (e) {
-      requestBody = {};
-    }
-
-    const userId = requestBody.userId;
-    const message = requestBody.message || "Hello from Lambda!";
-
-    if (!userId) {
+    const requestBody = event.body ? JSON.parse(event.body) : {};
+    if (!requestBody.to || !requestBody.messages) {
       return {
         statusCode: 400,
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          error: "userId is required in request body",
+          error: "to and messages are required in request body",
         }),
       };
     }
 
+    const to = requestBody.to;
+    const messages = requestBody.messages;
+
     // LINE APIにメッセージを送信
     const lineResponse = await sendLineMessage(
       channelAccessToken,
-      userId,
-      message
+      to,
+      messages
     );
 
     if (!lineResponse.ok) {
@@ -109,10 +94,6 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        message: "LINE message sent successfully",
-        userId: userId,
-      }),
     };
   } catch (error) {
     console.error("Error:", error);
