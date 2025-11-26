@@ -3,6 +3,7 @@ import * as cdk from "aws-cdk-lib";
 import { LambdaStudyStack } from "../lib/lambda-stack";
 import "dotenv/config";
 import { GitHubActionsRoleStack } from "../lib/githubActions-role-stack";
+import { ImageS3Stack } from "../lib/image-s3-stack";
 const app = new cdk.App();
 
 const PREFIX = "game-line";
@@ -16,3 +17,5 @@ new LambdaStudyStack(app, "LambdaStudyStack", {
   lineChannelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
   lineChannelSecret: process.env.LINE_CHANNEL_SECRET,
 });
+
+new ImageS3Stack(app, "ImageS3Stack");
