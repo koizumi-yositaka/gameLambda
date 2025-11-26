@@ -52,7 +52,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     }
 
     const requestBody = event.body ? JSON.parse(event.body) : {};
-    if (!requestBody.to || !requestBody.messages) {
+    if (!requestBody.userId || !requestBody.messages) {
       return {
         statusCode: 400,
         headers: {
@@ -64,13 +64,13 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       };
     }
 
-    const to = requestBody.to;
+    const userId = requestBody.userId;
     const messages = requestBody.messages;
 
     // LINE APIにメッセージを送信
     const lineResponse = await sendLineMessage(
       channelAccessToken,
-      to,
+      userId,
       messages
     );
 
