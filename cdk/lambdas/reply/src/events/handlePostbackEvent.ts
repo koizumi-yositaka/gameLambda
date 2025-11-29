@@ -23,13 +23,22 @@ export default async function handlePostbackEvent(
 
     switch (parsed.action) {
       case "turn_action":
-        if (!parsed.commandType || !parsed.roomSessionId || !parsed.memberId) {
-          throw new Error("select, roomSessionId, and memberId are required");
+        if (
+          !parsed.commandType ||
+          !parsed.roomSessionId ||
+          !parsed.memberId ||
+          !parsed.turn
+        ) {
+          throw new Error(
+            "commandType, roomSessionId, memberId, and turn are required"
+          );
         }
+
         const result = await sendCommand(
           parsed.roomSessionId,
           parsed.commandType,
-          parsed.memberId
+          Number(parsed.memberId),
+          Number(parsed.turn)
         );
 
         await replyLineMessage(
@@ -52,10 +61,12 @@ export default async function handlePostbackEvent(
 const sendCommand = async (
   roomSessionId: string,
   commandType: string,
-  memberId: string
+  memberId: number,
+  turn: number
 ): Promise<AddCommandResult> => {
   const gameServerEndpoint = `${process.env.GAME_SERVER_ENDPOINT}/api/sessions/${roomSessionId}/commands`;
   const requestBody = {
+    turn: turn,
     commands: [
       {
         type: commandType,
