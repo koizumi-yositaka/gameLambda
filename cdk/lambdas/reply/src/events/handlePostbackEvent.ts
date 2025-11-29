@@ -69,7 +69,7 @@ const sendCommand = async (
     turn: turn,
     commands: [
       {
-        type: commandType,
+        commandType: commandType,
         memberId: memberId,
       },
     ],
