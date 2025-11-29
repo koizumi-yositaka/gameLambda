@@ -12,6 +12,12 @@ interface LineWebhookEvent {
     id: string;
     text?: string;
   };
+  postback?: {
+    data: string;
+    params?: {
+      [key: string]: string;
+    };
+  };
   timestamp: number;
 }
 

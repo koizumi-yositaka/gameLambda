@@ -4,6 +4,7 @@ import { verifySignature } from "./common/lineCommon";
 import handleMessageEvent from "./events/handleMessageEvent";
 import handleFollowEvent from "./events/handleFollowEvent";
 import handleUnfollowEvent from "./events/handleUnfollowEvent";
+import handlePostbackEvent from "./events/handlePostbackEvent";
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   console.log("Webhook event received");
@@ -97,6 +98,8 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
           await handleFollowEvent(webhookEvent, channelAccessToken);
         } else if (webhookEvent.type === "unfollow") {
           await handleUnfollowEvent(webhookEvent);
+        } else if (webhookEvent.type === "postback") {
+          await handlePostbackEvent(webhookEvent);
         } else {
           console.log(`Unhandled event type: ${webhookEvent.type}`);
         }
