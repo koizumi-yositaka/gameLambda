@@ -43,8 +43,12 @@ const sendCommand = async (
 ): Promise<void> => {
   const gameServerEndpoint = `${process.env.GAME_SERVER_ENDPOINT}/api/sessions/${roomSessionId}/commands`;
   const requestBody = {
-    commandType: commandType,
-    memberId: memberId,
+    commands: [
+      {
+        type: commandType,
+        memberId: memberId,
+      },
+    ],
   };
 
   const response = await fetch(gameServerEndpoint, {
