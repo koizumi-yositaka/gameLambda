@@ -1,11 +1,18 @@
+import { replyLineMessage } from "../common/lineCommon";
+
 export default async function handlePostbackEvent(
-  event: LineWebhookEvent
+  event: LineWebhookEvent,
+  channelAccessToken: string
 ): Promise<void> {
   try {
     console.log("Postback event received");
     if (!event.postback) {
       throw new Error("postback data is required");
     }
+    if (!event.replyToken) {
+      throw new Error("reply token is required");
+    }
+    const replyToken = event.replyToken;
     const data = event.postback?.data;
     const params = event.postback?.params || {};
     console.log("postback data:", data);
@@ -19,10 +26,16 @@ export default async function handlePostbackEvent(
         if (!parsed.commandType || !parsed.roomSessionId || !parsed.memberId) {
           throw new Error("select, roomSessionId, and memberId are required");
         }
-        await sendCommand(
+        const result = await sendCommand(
           parsed.roomSessionId,
           parsed.commandType,
           parsed.memberId
+        );
+
+        await replyLineMessage(
+          channelAccessToken,
+          replyToken,
+          result.isValid ? "コマンドを受理しました" : "無効なコマンドです"
         );
         break;
       default:
@@ -40,7 +53,7 @@ const sendCommand = async (
   roomSessionId: string,
   commandType: string,
   memberId: string
-): Promise<void> => {
+): Promise<AddCommandResult> => {
   const gameServerEndpoint = `${process.env.GAME_SERVER_ENDPOINT}/api/sessions/${roomSessionId}/commands`;
   const requestBody = {
     commands: [
@@ -77,8 +90,9 @@ const sendCommand = async (
     };
   }
 
-  const result = await response.json();
+  const result = (await response.json()) as AddCommandResult;
   console.log("Game server API result:", result);
+  return result;
 };
 
 type PostbackData = {
@@ -100,3 +114,9 @@ function parsePostbackData(raw: string): PostbackData {
 
   return result as PostbackData;
 }
+
+type AddCommandResult = {
+  roomSessionId: number;
+  commandsCount: number;
+  isValid: boolean;
+};
