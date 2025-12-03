@@ -40,7 +40,8 @@ export default async function handlePostbackEvent(
           parsed.commandType,
           Number(parsed.memberId),
           Number(parsed.turn),
-          parsed.formId
+          parsed.formId,
+          parsed.arg ?? ""
         );
 
         await replyLineMessage(
@@ -65,7 +66,8 @@ const sendCommand = async (
   commandType: string,
   memberId: number,
   turn: number,
-  formId: string
+  formId: string,
+  arg: string
 ): Promise<AddCommandResult> => {
   const gameServerEndpoint = `${process.env.GAME_SERVER_ENDPOINT}/api/sessions/${roomSessionId}/commands`;
   const requestBody = {
@@ -75,6 +77,7 @@ const sendCommand = async (
       {
         commandType: commandType,
         memberId: memberId,
+        arg: arg,
       },
     ],
   };
